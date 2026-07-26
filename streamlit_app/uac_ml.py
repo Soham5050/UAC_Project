@@ -334,7 +334,7 @@ def _fit_lstm_forecast(
     validation_error = validation_actual - validation_predicted
     test_mae, test_rmse = _forecast_metrics(test_actual, test_predicted)
 
-    all_scaler = StandardScaler().fit(frame.features)
+    all_scaler = StandardScaler().fit(frame.history_features)
     all_target_scaler = StandardScaler().fit(frame.targets[target_name])
     all_x, all_y = _sequence_arrays(frame, frame.features.index, target_name, all_scaler, all_target_scaler)
     latest_history = all_scaler.transform(frame.history_features.tail(21)).astype(np.float32)[None, :, :]

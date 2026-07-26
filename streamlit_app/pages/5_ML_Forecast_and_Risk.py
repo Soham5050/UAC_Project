@@ -28,7 +28,11 @@ def cached_suite(fingerprint: str, _data: pd.DataFrame):
 
 
 fingerprint = f"{full_df['date'].min()}-{full_df['date'].max()}-{len(full_df)}-{z_thresh}"
-suite = cached_suite(fingerprint, full_df)
+try:
+    suite = cached_suite(fingerprint, full_df)
+except ValueError as exc:
+    st.error(f"Unable to build the ML outlook: {exc}")
+    st.stop()
 
 st.markdown(
     f"**Held-out test period:** {suite.test_start.date()} \u2013 {suite.test_end.date()} "
@@ -108,17 +112,17 @@ for column, key in ((left, "cbp_risk"), (right, "hhs_risk")):
 available_risks = [r for r in suite.risks.values() if r.available and not r.feature_importance.empty]
 if available_risks:
     st.markdown("---")
-    top = available_risks[0]
-    importance = top.feature_importance.head(10).sort_values("importance")
-    fig_imp = go.Figure(go.Bar(
-        x=importance["importance"], y=importance["feature"],
-        orientation="h", marker_color="#059669",
-    ))
-    fig_imp.update_layout(
-        title=f"Top operational signals \u2014 {labels[top.label]} risk model",
-        height=380, margin=dict(l=10, r=10, t=45, b=10),
-    )
-    st.plotly_chart(fig_imp, width="stretch")
+    for top in available_risks:
+        importance = top.feature_importance.head(10).sort_values("importance")
+        fig_imp = go.Figure(go.Bar(
+            x=importance["importance"], y=importance["feature"],
+            orientation="h", marker_color="#059669",
+        ))
+        fig_imp.update_layout(
+            title=f"Top operational signals \u2014 {labels[top.label]} risk model",
+            height=380, margin=dict(l=10, r=10, t=45, b=10),
+        )
+        st.plotly_chart(fig_imp, width="stretch")
 
 st.markdown("---")
 st.markdown("### Download current outlook")
